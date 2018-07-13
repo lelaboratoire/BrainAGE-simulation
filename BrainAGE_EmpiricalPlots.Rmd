@@ -1,0 +1,293 @@
+---
+title: "BrainAGE_EmpiricalPlots"
+author: "Rayus"
+date: "July 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## Empirical Plots
+
+Make plots and print stats for empirical data.
+
+```{r read_input}
+
+#body related variables
+body_vars <- c('BMI','DryLeanMass','FatMass','LeanBodyMass','PercentBodyFat','Water','Height','Weight','W.HRatio',
+               'Hipsize','Waistsize', 'PercentWater', 'PercentDryLean')
+#drug use related variables
+drug_vars <-    c('DAST','NegRein',
+                  'CDDR_PosReinforcement','PROMIS_AlcoholNegConsqTscore',
+                  'AlcNegExp','PROMIS_AlcoholPosConsqTscore',
+                  'PROMIS_AlcoholPosExpectTscore','PROMIS_AlcoUseTscore',
+                  'NicCope','NicDepen',
+                  'NicEmoExp',
+                  'NicHealth','NicPsySoc','PROMIS_NicSocialMotivationsTscore')
+
+nicotine_vars <- c('NicCope','NicDepen',
+                   'NicEmoExp',
+                   'NicHealth','NicPsySoc','PROMIS_NicSocialMotivationsTscore')
+
+#all other self report
+report_vars <- c('IPAQ_METMin', 'IPAQ_Sitting', 'WHODAS_Score', 'PROMIS_FatigueTscore', 'PANASX_Fatigue', 
+                 'PROMIS_PainBehTscore', 'PROMIS_PainInterfTscore','PhysFunc', 'ASI_CognConcerns', 
+                 'ASI_PhysConcerns', 'ASI_SociConcerns','ASI_TotalScore','BAS_Drive','BAS_FunSeeking',
+                 'BAS_Reward','BFI_Agreeb','BFI_Conscious','BFI_Extrav','BFI_Neurot','Openness','Inhibition',
+                 'CTQ_Denial','CTQ_EmotAbuse','CTQ_EmotNeglect','CTQ_PhysAbuse','CTQ_PhysNeglect',
+                 'CTQ_score','CTQSexAbus','Trauma','TES_TotalOccurrence','TES_WorstIntensity','EDDS_Score',
+                 'IRI_EmpaConcern','IRI_Fantasy','IRI_PersonDistr','IRI_PerspTak','MAIA_AttendReg','MAIA_BodyListen',
+                 'MAIA_EmotAware','MAIA_NoDistract','MAIA_Notice','MAIA_NoWorry','MAIA_SelfReg','MAIA_Trust',
+                 'PANASX_Attentiveness','PANASX_Fear','PANASX_Guilt','PANASX_Hostility','PANASX_Joviality',
+                 'PANASX_NegAffect','PANASX_PosAffect','PANASX_Sadness','SelfAssure','PANASX_Serenity',
+                 'PANASX_Shyness','PANASX_Surprise','PROMIS_AbiSocialTscore','PROMIS_AffectWellbeingTscore',
+                 'PROMIS_AngerTscore','Anxiety','PROMIS_AppCogAbiTscore','PROMIS_AppCogGenTscore',
+                 'PROMIS_DepressTscore','PROMIS_EmotSuppTscore','PROMIS_InfoSuppTscore','IntSexAct',
+                 'PROMIS_SatisfiActTscore','PROMIS_SleepDisturbTscore','PROMIS_SleepImpairTscore',
+                 'PROMIS_SocialIsoTscore','PROMIS_SocSatDSATscore','RRS_Score','STAI_State','STAI_Trait',
+                 'TAS_DifficultyDescribingFeelings','TAS_DifficultyIDFeelings','TAS_ExternallyOrientedThinking',
+                 'TAS_Score','TEPS_Anticipatory','TEPS_Consummatory','DietRest','TFEQDisin','TFEQ_Hunger',
+                 'UPPSP_NegUrgency','UPPSP_PerservLack','PosUrg','LackPremed','UPPSP_SensSeek','PHQ','SCOFF')
+
+#neuropsych variables
+np_vars <- c("NP_CVLT_FalsePositives","NP_CVLT_LongDelayCuedRecall", "NP_CVLT_LongDelayFreeRecall",
+             "NP_CVLT_LongDelayRetentionVsTrial5","NP_CVLT_Recognition", "NP_CVLT_SemanticClustering",
+             "NP_CVLT_ShortDelayCuedRecall","NP_CVLT_ShortDelayFreeRecall", "NP_CVLT_ShortDelayRetentionVsTrial5",        
+             "NP_CVLT_TotalIntrusions","NP_CVLT_TotalRepetitions", "NP_CVLT_Trial1Scaled",                         
+             "NP_CVLT_Trial1to5Scaled","NP_CVLT_TrialBScaled", "NP_CW_ColorNamingScaled",                      
+             "NP_CW_ColorWordReadingScaled","NP_CW_CombinedReadingCompScaled", 
+             "NP_CW_ErrorsInhibitionSwitchingScaled","NP_CW_InhibitionErrorsCumulativeRank",
+             "NP_CW_InhibitionScaled", "NP_CW_InhibitionSwitchingScaled",              
+             "NP_CW_InhibitionSwitchingVsColorNamingScaled","NP_CW_InhibitionSwitchingVsWordReadingScaled", 
+             "NP_CW_InhibitionVsColorNamingScaled","NP_CW_InhibitionVsCombinedNamingReadingScaled",
+             "NP_CW_NamingErrorsCumulativeRank", "NP_CW_ReadingErrorsCumulativeRank","NP_DS_BackwardScaled",
+             "NP_DS_ForwardScaled", "NP_DS_SequencingScaled","NP_DS_TotalScaled","NP_VF_CategoryFluency", 
+             "NP_VF_CategorySwitching","NP_VF_CategorySwitchingTotalAccuracy","NP_VF_LetterFluency", 
+             "NP_VF_RepetitionErrors","NP_VF_SetLossErrors")
+
+#all included variables
+included_variables <- c(report_vars, drug_vars, body_vars, np_vars)
+
+#contains behavioral data, age, sex, etc. for the testing set
+testing_data <- read.csv('testing_data.csv')
+
+#Contains 4 columns--id, predicted_age, BrainAGE, and BrainAGER
+BrainAGE_data <- read.csv('T500_BrainAGE.csv')
+#merge self-report data with BrainAGE data
+merged_data <- merge(testing_data, BrainAGE_data)
+
+training_data <- read.csv('training_data.csv')
+```
+
+## Basic Demographics
+Show Age, sex for testing and training sets
+
+```{r basic_demographics, echo = FALSE}
+
+print('Training Age Range')
+range(training_data$Age)
+print('Training Age Mean')
+mean(training_data$Age)
+print('Training Age SD')
+sd(training_data$Age)
+print('Training Sex')
+table(training_data$Gender)
+
+print('Testing Age Range')
+range(testing_data$Age)
+print('Testing Age Mean')
+mean(testing_data$Age)
+print('Testing Age SD')
+sd(testing_data$Age)
+print('Testing Sex')
+table(testing_data$Gender)
+
+print('t-test for mean age difference between sets')
+t.test(training_data$Age, testing_data$Age)
+
+prop.test(rbind(table(training_data$Gender), table(testing_data$Gender)))
+
+
+```
+
+
+
+## Correlation Histogram
+Show correlations between self-report variables and age.
+
+```{r correlation_histogram}
+
+
+# The palette with grey:
+cbPaletteGrey <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbPaletteBlack <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+
+
+png('correlation_hist.png')
+age_cors <- cor(testing_data$Age, testing_data[, included_variables], use = 'pairwise.complete.obs') 
+hist(age_cors, main = 'Correlation Between Observed Variables and Age', 
+     xlab = 'Pearson r', ylab = 'Count of Variables', breaks = 20)
+dev.off()
+hist(age_cors, main = 'Correlation Between Observed Variables and Age', 
+     xlab = 'Pearson r', ylab = 'Count of Variables', breaks = 20)
+
+```
+
+
+## Results on Training Data
+
+```{r training results}
+
+#reads in the model from Caret, which is saved as svr_model
+load('trained_svr_model.RData')
+
+deltas <- svr_model$pred$obs - svr_model$pred$pred 
+print('Training MAE is:')
+mean(abs(deltas))
+
+print('Training R^2 is:')
+ss_resid <- sum((deltas)^2)
+ss_total <- sum((svr_model$pred$obs - mean(svr_model$pred$obs))^2)
+r2 <- 1 - (ss_resid / ss_total)
+print(r2)
+```
+
+## Scatter Plots with Age, Predicted AGE, and BrainAGE
+
+```{r scatter_plots}
+
+p <- ggplot(merged_data, aes(x = Age, y = predicted_age)) + geom_point(shape = 1, size = 0.5) + 
+  geom_abline(intercept = 0, slope = 1, color = cbPaletteBlack[3]) + labs(x = "Age (years)", y = "Predicted Age (years)") + 
+  theme_bw() + xlim(17, 60) + ylim(17, 60) + ggtitle('Age vs Predicted Age')
+p
+ggsave('age_vs_predicted.png', dpi = 300, width = 3, height = 3, units = 'in')
+
+ss_resid <- sum((merged_data$BrainAGE)^2)
+ss_total <- sum((merged_data$Age - mean(merged_data$Age))^2)
+r2 <- 1 - (ss_resid / ss_total)
+mae <- mean(abs(merged_data$BrainAGE))
+print(paste('testing R^2 is:', r2))
+print(paste('testing MAE is:', mae))
+print(paste('correlation between age and predicted age is', cor(merged_data$Age, merged_data$predicted_age)))
+
+print(paste('correlation between age and BrainAGE', cor(merged_data$BrainAGE, merged_data$Age)))
+print(paste('correlation between age and BrainAGER', cor(merged_data$BrainAGER, merged_data$Age)))
+
+p <- ggplot(merged_data, aes(x = Age, y = BrainAGE)) + geom_point(shape = 1, size = 0.5) + 
+  labs(x = "Age (years)", y = "BrainAGE") + geom_smooth(method = "lm", color = cbPaletteBlack[3], se = FALSE) +
+  theme_bw() + xlim(18, 60) + ylim(-22, 22) + ggtitle('Age vs BrainAGE')
+p
+ggsave('age_vs_BrainAGE.tiff', dpi = 300, width = 3, height = 3, units = 'in')
+
+print(paste('Correlation between Age and BrainAGE:', cor(merged_data$Age, merged_data$BrainAGE)))
+
+
+p <- ggplot(merged_data, aes(x = Age, y = BrainAGER)) + geom_point(shape = 1, size = 0.5) + 
+  labs(x = "Age (years)", y = "BrainAGER") + geom_smooth(method = "lm", color = cbPaletteBlack[3], se = FALSE) +
+  theme_bw() + xlim(18, 60) + ylim(-20, 20) + ggtitle('Age vs BrainAGER')
+p
+ggsave('age_vs_BrainAGER.tiff', dpi = 300, width = 3, height = 3, units = 'in')
+```
+
+## Relationships between BrainAGE, BrainAGER, and Covariates of interest
+
+```{r final_relationships}
+library(psych)
+
+BrainAGE_cors_pvals <- corr.test(as.matrix(merged_data$BrainAGE), merged_data[, included_variables], adjust = 'none')
+BrainAGER_cors_pvals <- corr.test(as.matrix(merged_data$BrainAGER), merged_data[, included_variables], adjust = 'none')
+all_pvals <- as.data.frame(cbind(t(BrainAGE_cors_pvals$p)))
+names(all_pvals) <- c('pval')
+all_pvals$Measure <- 'BrainAGE'
+all_pvals$color = 'red'
+#add age_cors, so we can plot delta(p) as a function of age-covariate correlation
+all_pvals <- cbind(all_pvals, t(age_cors))
+names(all_pvals)[ncol(all_pvals)] <- 'age_cor'
+other_pvals <- as.data.frame(cbind(t(BrainAGER_cors_pvals$p)))
+names(other_pvals) <- c('pval')
+other_pvals$Measure <- 'BrainAGER'
+other_pvals$color = 'blue'
+other_pvals <- cbind(other_pvals, t(age_cors))
+names(other_pvals)[ncol(other_pvals)] <- 'age_cor'
+all_pvals <- rbind(all_pvals, other_pvals)
+all_pvals$log_pval <- -log10(all_pvals$pval)
+
+
+#make a manhattan plot showing BrainAGE and BrainAGER p-values
+p <- ggplot(all_pvals) + geom_point(aes(x = age_cor, y = log_pval, shape = Measure, color = Measure), size = 0.5) + 
+   labs(y = '-log(p)', x = 'Age-Covariate Correlation') +
+  geom_abline(intercept = -log10(0.05), slope = 0, color = 'black') + theme_bw() + 
+  theme(legend.justification=c(0.5,0.5), legend.position=c(0.5, 0.87), legend.background = element_rect(color = 'black', size = 0.5),
+        legend.title = element_blank(), legend.margin = margin(c(0,1,1,1))) + scale_color_manual(values = c('red', 'blue'))
+p
+ggsave('manhattan.tiff', dpi = 300, width = 3, height = 3, units = 'in')
+
+
+#####
+
+wide_cors <- as.data.frame(t(BrainAGE_cors_pvals$r))
+rownames(wide_cors) == rownames(as.data.frame(t(BrainAGER_cors_pvals$r))) #just to confirm that the rows are in the same order
+rownames(t(age_cors)) == rownames(wide_cors)
+wide_cors <- cbind(wide_cors, as.data.frame(t(BrainAGER_cors_pvals$r)))
+wide_cors <- cbind(wide_cors, t(age_cors))
+names(wide_cors) <- c('BrainAGE_r', 'BrainAGER_r', 'age_r')
+wide_cors$age_r2 <- wide_cors$age_r^2
+wide_cors$abs_delta_r2 <- abs(wide_cors$BrainAGE_r^2 - wide_cors$BrainAGER_r^2)
+
+p <- ggplot(wide_cors, aes(x = age_r2, y = abs_delta_r2)) + geom_point(shape = 1, size = 0.5) + 
+  labs(x = "Age-Covariate r^2", y = "|BrainAGE_r^2 - BrainAGER_r^2|") +
+  theme_bw() + xlim(0, 0.11) #+ ylim(0, 0.25) + ggtitle('Relationship Between Age-Covariate\nCorrelation and Delta from Residualizing')
+p
+ggsave('F3a_r2_abs_r2_delta.tiff', dpi = 300, width = 3, height = 3, units = 'in')
+
+
+wide_cors$delta_r <- wide_cors$BrainAGER_r - wide_cors$BrainAGE_r
+wide_cors$delta_r2 <- wide_cors$delta_r^2
+
+p <- ggplot(wide_cors, aes(x = age_r2, y = delta_r2)) + geom_point(shape = 1, size = 0.5) + 
+  labs(x = expression("Age-Covariate"~R^2), y = expression((Delta ~ r)^2)) +
+  theme_bw() + xlim(0, 0.11) #+ ylim(0, 0.25) + ggtitle('Relationship Between Age-Covariate\nCorrelation and Delta from Residualizing')
+p
+ggsave('F3a_delta_squared.tiff', dpi = 300, width = 3, height = 3, units = 'in')
+
+
+#for a supplemental table, list all variables with FDR corrected p-values below 0.05 for each method
+BrainAGE_cors_pvals <- corr.test(as.matrix(merged_data$BrainAGE), merged_data[, included_variables], adjust = 'fdr')
+BrainAGER_cors_pvals <- corr.test(as.matrix(merged_data$BrainAGER), merged_data[, included_variables], adjust = 'fdr')
+supp_table <- cbind(t(rbind(BrainAGE_cors_pvals$r, BrainAGE_cors_pvals$p)), t(rbind(BrainAGER_cors_pvals$r, BrainAGER_cors_pvals$p)), t(age_cors))
+supp_table <- as.data.frame(supp_table)
+
+supp_table <- round(supp_table, digits = 3)
+names(supp_table) <- c('r_BrainAGE', 'p_BrainAGE', 'r_BrainAGER', 'p_BrainAGER', 'r_age')
+print(supp_table)
+write.csv(supp_table[supp_table$p_BrainAGE < 0.05 | supp_table$p_BrainAGER < 0.05,], 'r_p_values_top.csv')
+
+BrainAGER_cors <- cor(merged_data$BrainAGER, merged_data[, included_variables], use = 'pairwise.complete.obs')
+BrainAGE_cors <- cor(merged_data$BrainAGE, merged_data[, included_variables], use = 'pairwise.complete.obs')
+
+
+plot_data <- as.data.frame(cbind(as.vector(age_cors), as.vector(BrainAGE_cors), as.vector(BrainAGER_cors)))
+names(plot_data) <- c('age_cor', 'brainage_cor', 'brainager_cor')
+
+
+p <- ggplot(plot_data) + geom_point(aes(x = brainage_cor, y = brainager_cor, col = age_cor)) + 
+  ggtitle('') + scale_color_gradient2(high = 'red', low = 'blue', mid = 'grey', breaks = c(-0.3,0,0.2)) + geom_abline(slope = 1) + 
+  xlab('Covariate-BrainAGE Correlation') + ylab('Covariate-BrianAGER Correlation') + 
+  labs(color = 'Age-Covariate\nCorrelation') + theme_bw() + theme(legend.position = c(0.2, 0.9), legend.direction = 'horizontal',
+                                                                  legend.background = element_blank(), legend.title = element_blank()) +
+  ggtitle('Age-Covariate r')
+  
+p
+ggsave('correlation_dots_colors.tiff', p, dpi = 300, width = 4, height = 3, units = 'in')
+
+
+
+```
+
+
