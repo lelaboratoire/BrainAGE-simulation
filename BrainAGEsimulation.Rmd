@@ -11,25 +11,28 @@ library(ggplot2)
 library(e1071)
 
 remove(list = ls())
+set.seed(12345)
+
+
 today <- Sys.Date()
 plotABFs <- F
 saveplot = FALSE; ntraining = 500; ntesting = 500; nvars = 100; errorEps = 10; plot_prefix = ''; errorEta = 0.5;
 beta0 = 100; beta1 = -1; 
-errorEpsPct = 2;
-errorEtaPct = 1.2;
-nonDecaysd = 5;
+errorEpsPct = 2; #2
+errorEtaPct = 0.4;  #1.2
+# nonDecaysd = 5;
 decayPct = 0.75;
-# scaleFac = 1/2500;
-scaleFac = 1/4500;
+scaleFac = 1/80; #1/120; 1/2500
+# scaleFac = 1/4500;
 
 nruns <- 100
 
 w1Sd <- 1
 w2Sd <- 1
 w3Sd <- 1
-w1MeanMean <- 2
-w2MeanMean <- 2
-w3MeanMean <- 2
+w1MeanMean <- 20 #2
+w2MeanMean <- 20 #2
+w3MeanMean <- 20 #2
 
 cbPaletteGrey <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 cbPaletteBlack <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -221,7 +224,7 @@ levels(pCombAgeMelt$ageAsCov) <- c("BrainAGE ~ Covariates", "BrainAGE ~ Covariat
 
 
 ```{r}
-myeffectSize <- round(mean(effectSizes), 3)
+myeffectSize <- formatC(mean(effectSizes), digit = 3, format="f")
 
 p2 <- ggplot(pCombAgeMelt, 
             aes(group = cov, x = cov, y = nlogpval, fill = relateV)) + 
@@ -240,10 +243,10 @@ p2 <- ggplot(pCombAgeMelt,
 print(p2)
 
 # ggsave(file = paste0("Random", myeffectSize, "FoldChange", nruns, "runs.pdf"), plot = p2, width = 8, height = 5)
-
+save(myeffectSize, pCombAgeMelt, nruns, file = paste0("Random", myeffectSize, "FoldChange", nruns, "runs.RData"))
 ```
 
 ```{r}
-
+sessionInfo()
 ```
 
