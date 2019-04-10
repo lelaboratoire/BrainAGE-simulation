@@ -48,7 +48,7 @@ These are the corrections:
 #### Supplement
 
 *Clarification*:
-Supplementary Figure S1. Simple linear simulation, demonstrating the correlation between residuals (predicted - observed values) and observed values on the test set. Here, $y = x + \epsilon$ where \epsilon$ was normally distributed with mean 0 and standard deviation $\sigma$. After obtaining the age prediction on the test set and fitting a line, the residuals are correlated with observed values of $y$, and that correlation decreases with decreasing $\sigma$. 
+Supplementary Figure S1. Simple linear simulation, demonstrating the correlation between residuals **(predicted - observed values)** and observed values **on the test set**. Here, y = x + \epsilon where \epsilon was normally distributed with mean 0 and standard deviation \sigma. After **obtaining the age prediction on the test set and** fitting a line, the residuals are correlated with observed values of y, and that correlation decreases with decreasing \sigma. 
 
 *Typographical error fix*: Supplementary Figure S3:
 The second age-basis function f_2(A) should have included an intercept of -100:
