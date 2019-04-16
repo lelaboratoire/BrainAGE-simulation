@@ -34,7 +34,7 @@ These are the corrections:
 
 ##### p.5. 
 - Figure 1: \omega_{1k} should be \omega_{1ik} and so on; \epsilon_{Z_i} should be \epsilon_{ij}.
-- Left column, last paragraph, first sentence should read: linear regression of BrainAGE on the covariates of interest
+- Left column, last paragraph, first sentence should read: linear regressions of BrainAGE on the covariates of interest
 - Right column, Simulation Steps:
   - 2\. \sigma_w should be \sigma_w^2
   - 3\. Equation 4 should be Equation 2
